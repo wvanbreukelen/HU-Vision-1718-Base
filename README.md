@@ -3,3 +3,6 @@ Assessment for course Vision (Hogeschool Utrecht). Teammembers: Kiet van Osnabru
 
 ## Schedule
 [Schedule](https://hogeschoolutrecht-my.sharepoint.com/:x:/g/personal/wiebe_vanbreukelen_student_hu_nl/EbH97KKLpkRPtmnqgkJ9acQBuBZ5KSvSXri5fRnnM_sNNQ?e=iXx4n3)
+
+## Implementation plan
+[Document](https://github.com/wvanbreukelen/HU-Vision-1718-Base/blob/master/implementatieplannen/working/Implementatieplan.docx)
