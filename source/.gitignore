@@ -20,3 +20,7 @@ ExternalDLL/Debug/
 *.opensdf
 ExternalDLL/ExternalDLL/Release/
 ExternalDLL/Release/
+
+# Remove very large files >50 MB in size
+source/ExternalDLL/.vs/ExternalDLL2017/v15/ipch/AutoPCH/*
+source/FaceRecognitionGUI/.vs/FaceRecognitionGUI2015/v15/ipch/AutoPCH/*
