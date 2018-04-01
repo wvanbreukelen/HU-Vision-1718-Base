@@ -46,7 +46,7 @@ public:
 	int calcGradientX(const IntensityImage &image, const int x, const int y, operators op = operators::PREWITT) const;
 	int calcGradientY(const IntensityImage &image, const int x, const int y, operators op = operators::PREWITT) const;
 
-	int calcMeanCenterPixel(const IntensityImage &image, int thresholdLevel = -1) const;
-	int calcMeanCornerPixel(const IntensityImage &image, int thresholdLevel = -1) const;
+	float calcMeanCenterPixel(const IntensityImage *image, int thresholdLevel = -1) const;
+	int calcMeanCornerPixel(const IntensityImage *image, int thresholdLevel = -1) const;
 
 };

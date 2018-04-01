@@ -1,4 +1,4 @@
-#include "StudentPreProcessing.h"
+﻿#include "StudentPreProcessing.h"
 #include <iostream>
 
 
@@ -101,15 +101,16 @@ IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &i
 	return newImage;
 }
 
-int StudentPreProcessing::calcMeanCenterPixel(const IntensityImage &image, int thresholdLevel) const {
-	int centerSum = 0, centerPixelAmt = 0;
 
-	for (int y = 0; y < image.getHeight(); y++) {
-		for (int x = 0; x < image.getWidth(); x++) {
-			if (x > 0 && x < image.getWidth() - 1 && y > 0 && y < image.getHeight() - 1) {
+float StudentPreProcessing::calcMeanCenterPixel(const IntensityImage *image, int thresholdLevel) const {
+	float centerSum = 0, centerPixelAmt = 0;
+
+	for (int y = 0; y < image->getHeight(); y++) {
+		for (int x = 0; x < image->getWidth(); x++) {
+			if (x > 0 && x < image->getWidth() - 1 && y > 0 && y < image->getHeight() - 1) {
 				// Center
-				if (thresholdLevel == -1 || thresholdLevel <= image.getPixel(x, y)) {
-					centerSum += image.getPixel(x, y);
+				if (thresholdLevel == -1 || thresholdLevel <= image->getPixel(x, y)) {
+					centerSum += image->getPixel(x, y);
 					centerPixelAmt++;
 				}
 
@@ -131,19 +132,19 @@ int StudentPreProcessing::calcMeanCenterPixel(const IntensityImage &image, int t
 
 }
 
-int StudentPreProcessing::calcMeanCornerPixel(const IntensityImage &image, int thresholdLevel) const {
+int StudentPreProcessing::calcMeanCornerPixel(const IntensityImage *image, int thresholdLevel) const {
 	int cornerSum = 0, cornerPixelAmt = 0;
 
-	for (int y = 0; y < image.getHeight(); y++) {
-		for (int x = 0; x < image.getWidth(); x++) {
-			if (x > 0 && x < image.getWidth() - 1 && y > 0 && y < image.getHeight() - 1) {
+	for (int y = 0; y < image->getHeight(); y++) {
+		for (int x = 0; x < image->getWidth(); x++) {
+			if (x > 0 && x < image->getWidth() - 1 && y > 0 && y < image->getHeight() - 1) {
 				// Center
 				//cornerSum += image.getPixel(x, y);
 				//cornerPixelAmt++;
 			} else {
 				// Randen
-				if (thresholdLevel == -1 || thresholdLevel <= image.getPixel(x, y)) {
-					cornerSum += image.getPixel(x, y);
+				if (thresholdLevel == -1 || thresholdLevel <= image->getPixel(x, y)) {
+					cornerSum += image->getPixel(x, y);
 					cornerPixelAmt++;
 				}
 			}
@@ -160,18 +161,42 @@ int StudentPreProcessing::calcMeanCornerPixel(const IntensityImage &image, int t
 }
 
 IntensityImage * StudentPreProcessing::stepThresholding(const IntensityImage &image) const {
-	IntensityImage* newImage = ImageFactory::newIntensityImage(image.getWidth(), image.getHeight());
+	IntensityImage* scaledImage = ImageFactory::newIntensityImage(image.getWidth(), image.getHeight());
+	IntensityImage* thresholdImage = ImageFactory::newIntensityImage(image.getWidth(), image.getHeight());
 
-	int u1 = calcMeanCenterPixel(image);
-	int u2 = calcMeanCornerPixel(image);
-	int tOld = 0;
+	float mean = calcMeanCenterPixel(&image);
+	std::cout << "Mean pixel value center: " << mean << std::endl;
+	float scalingsFactor = (0.002312 * (mean * mean)) - (0.0279 * mean) + 0.09358;
+
+	// Maximale waarde van de edge detection plaatje waarde bepalen.
+
+	for (int y = 0; y < image.getHeight(); y++) {
+		for (int x = 0; x < image.getWidth(); x++) {
+			// Center
+			//cornerSum += image.getPixel(x, y);
+			//cornerPixelAmt++;
+			int intensity = image.getPixel(x, y);
+			
+			//std::cout << scalingsFactor << std::endl;
+			intensity *= intensity * scalingsFactor;
+
+			intensity = intensity > 255 ? 255 : intensity;
+
+
+			scaledImage->setPixel(x, y, intensity);
+		}
+	}
+
+	int u1 = calcMeanCenterPixel(scaledImage);
+	int u2 = calcMeanCornerPixel(scaledImage);
+	int tOld = -1;
 	int tNew = (u1 + u2) / 2;
 
 	//std::cout << "New threshold: " << tNew << std::endl;
 
 	while (tNew != tOld) {
-		u1 = calcMeanCenterPixel(image, tNew);
-		u2 = calcMeanCornerPixel(image, tNew);
+		u1 = calcMeanCenterPixel(scaledImage, tNew);
+		u2 = calcMeanCornerPixel(scaledImage, tNew);
 
 		tOld = tNew;
 		tNew = (u1 + u2) / 2;
@@ -182,13 +207,13 @@ IntensityImage * StudentPreProcessing::stepThresholding(const IntensityImage &im
 	for (int y = 0; y < image.getHeight(); y++) {
 		for (int x = 0; x < image.getWidth(); x++) {
 			if (image.getPixel(x, y) >= tNew) {
-				newImage->setPixel(x, y, 255);
+				thresholdImage->setPixel(x, y, 255);
 			}
 			else {
-				newImage->setPixel(x, y, 0);
+				thresholdImage->setPixel(x, y, 0);
 			}
 		}
 	}
 
-	return newImage;
+	return thresholdImage;
 }
