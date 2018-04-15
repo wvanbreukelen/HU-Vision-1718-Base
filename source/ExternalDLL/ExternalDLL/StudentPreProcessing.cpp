@@ -1,5 +1,6 @@
 ﻿#include "StudentPreProcessing.h"
-#include <iostream>
+#include <opencv2/imgproc/imgproc.hpp>
+
 
 
 IntensityImage * StudentPreProcessing::stepToIntensityImage(const RGBImage &image) const {
@@ -11,13 +12,9 @@ IntensityImage * StudentPreProcessing::stepScaleImage(const IntensityImage &imag
 }
 
 int StudentPreProcessing::calcGradientX(const IntensityImage &image, const int x, const int y, operators op) const {
-	/**return (image.getPixel(x - 1, y - 1) * kernelGradientX[0][0] +
-			image.getPixel(x);**/
-
 	int sum = 0;
 
 	if (op == operators::SOBEL) {
-		//std::cout << "Using sobel X...\n";
 		for (int kernelX = 0; kernelX < 3; kernelX++) {
 			for (int kernelY = 0; kernelY < 3; kernelY++) {
 				sum += image.getPixel(x + kernelX - 1, y + kernelY - 1) * kernelGradientSobelX[kernelX][kernelY];
@@ -25,7 +22,6 @@ int StudentPreProcessing::calcGradientX(const IntensityImage &image, const int x
 		}
 	}
 	else if (op == operators::PREWITT) {
-		//std::cout << "Using prewitt X...\n";
 		for (int kernelX = 0; kernelX < 3; kernelX++) {
 			for (int kernelY = 0; kernelY < 3; kernelY++) {
 				sum += image.getPixel(x + kernelX - 1, y + kernelY - 1) * kernelGradientPrewittX[kernelX][kernelY];
@@ -39,13 +35,9 @@ int StudentPreProcessing::calcGradientX(const IntensityImage &image, const int x
 }
 
 int StudentPreProcessing::calcGradientY(const IntensityImage &image, const int x, const int y, operators op) const {
-	/**return (image.getPixel(x - 1, y - 1) * kernelGradientX[0][0] +
-			image.getPixel(x);**/
-
 	int sum = 0;
 
 	if (op == operators::SOBEL) {
-		//std::cout << "Using sobel Y...\n";
 		for (int kernelX = 0; kernelX < 3; kernelX++) {
 			for (int kernelY = 0; kernelY < 3; kernelY++) {
 				sum += image.getPixel(x + kernelX - 1, y + kernelY - 1) * kernelGradientSobelY[kernelX][kernelY];
@@ -53,7 +45,6 @@ int StudentPreProcessing::calcGradientY(const IntensityImage &image, const int x
 		}
 	}
 	else if (op == operators::PREWITT) {
-		//std::cout << "Using prewitt Y...\n";
 		for (int kernelX = 0; kernelX < 3; kernelX++) {
 			for (int kernelY = 0; kernelY < 3; kernelY++) {
 				sum += image.getPixel(x + kernelX - 1, y + kernelY - 1) * kernelGradientPrewittY[kernelX][kernelY];
@@ -66,38 +57,50 @@ int StudentPreProcessing::calcGradientY(const IntensityImage &image, const int x
 }
 
 IntensityImage * StudentPreProcessing::stepEdgeDetection(const IntensityImage &image) const {
-
-
-	//IntensityImageStudent* newImage = new IntensityImageStudent(image.getWidth(), image.getHeight());
 	IntensityImage* newImage = ImageFactory::newIntensityImage(image.getWidth(), image.getHeight());
 
-	// Loop through all pixels and apply kernel to calculate gradients.
+	float timings[testIterations];
 
-	for (int y = 0; y < image.getHeight(); y++) {
-		for (int x = 0; x < image.getWidth(); x++) {
+	for (int i = 0; i < testIterations; i++) {
+		long startTime = cv::getTickCount();
 
-			if (x > 0 && x < image.getWidth() - 1 && y > 0 && y < image.getHeight() - 1) {
-				int gradientX = calcGradientX(image, x, y);
-				int gradientY = calcGradientY(image, x, y);
+		// Loop through all pixels and apply kernel to calculate gradients.
 
-				int sum = abs(gradientX) + abs(gradientY);
-				sum = sum > 255 ? 255 : sum;
-				sum = sum < 0 ? 0 : sum;
-				newImage->setPixel(x, y, sum);
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+
+				if (x > 0 && x < image.getWidth() - 1 && y > 0 && y < image.getHeight() - 1) {
+					int gradientX = calcGradientX(image, x, y);
+					int gradientY = calcGradientY(image, x, y);
+
+					int sum = abs(gradientX) + abs(gradientY);
+					sum = sum > 255 ? 255 : sum;
+					sum = sum < 0 ? 0 : sum;
+					newImage->setPixel(x, y, sum);
+				}
+				else {
+					newImage->setPixel(x, y, 0);
+				}
+
+
+
 			}
-			else {
-				newImage->setPixel(x, y, 0);
-			}
-
-
-
 		}
+
+		long endTime = cv::getTickCount();
+
+		timings[i] = ((endTime - startTime) / cv::getTickFrequency());
 	}
 
-	// Using the X and Y gradients, create a new intensity image.
+	float sum = 0.0f;
 
+	// Take a average
+	for (int i = 0; i < testIterations; i++) {
+		sum += timings[i];
+	}
 
-	//return nullptr;
+	std::cout << "Elapsed time edge detection: " << (sum / testIterations) << std::endl;
+
 	return newImage;
 }
 
@@ -113,13 +116,7 @@ float StudentPreProcessing::calcMeanCenterPixel(const IntensityImage *image, int
 					centerSum += image->getPixel(x, y);
 					centerPixelAmt++;
 				}
-
 			}
-			//else {
-				// Randen
-				//cornerSum += image.getPixel(x, y);
-				//cornerPixelAmt++;
-			//}
 		}
 	}
 
@@ -132,7 +129,7 @@ float StudentPreProcessing::calcMeanCenterPixel(const IntensityImage *image, int
 
 }
 
-int StudentPreProcessing::calcMeanCornerPixel(const IntensityImage *image, int thresholdLevel) const {
+int StudentPreProcessing::calcMeanBorderPixel(const IntensityImage *image, int thresholdLevel) const {
 	int cornerSum = 0, cornerPixelAmt = 0;
 
 	for (int y = 0; y < image->getHeight(); y++) {
@@ -163,57 +160,47 @@ int StudentPreProcessing::calcMeanCornerPixel(const IntensityImage *image, int t
 IntensityImage * StudentPreProcessing::stepThresholding(const IntensityImage &image) const {
 	IntensityImage* scaledImage = ImageFactory::newIntensityImage(image.getWidth(), image.getHeight());
 	IntensityImage* thresholdImage = ImageFactory::newIntensityImage(image.getWidth(), image.getHeight());
+	float timings[testIterations];
 
-	float mean = calcMeanCenterPixel(&image);
-	std::cout << "Mean pixel value center: " << mean << std::endl;
-	float scalingsFactor = (0.002312 * (mean * mean)) - (0.0279 * mean) + 0.09358;
+	for (int i = 0; i < testIterations; i++) {
+		long startTime = cv::getTickCount();
 
-	// Maximale waarde van de edge detection plaatje waarde bepalen.
+		int u1 = calcMeanCenterPixel(&image);
+		int u2 = calcMeanBorderPixel(&image);
+		int tOld = -1;
+		int tNew = (u1 + u2) / 2;
 
-	for (int y = 0; y < image.getHeight(); y++) {
-		for (int x = 0; x < image.getWidth(); x++) {
-			// Center
-			//cornerSum += image.getPixel(x, y);
-			//cornerPixelAmt++;
-			int intensity = image.getPixel(x, y);
-			
-			//std::cout << scalingsFactor << std::endl;
-			intensity *= intensity * scalingsFactor;
+		while (tNew != tOld) {
+			u1 = calcMeanCenterPixel(&image, tNew);
+			u2 = calcMeanBorderPixel(&image, tNew);
 
-			intensity = intensity > 255 ? 255 : intensity;
-
-
-			scaledImage->setPixel(x, y, intensity);
+			tOld = tNew;
+			tNew = (u1 + u2) / 2;
 		}
-	}
 
-	int u1 = calcMeanCenterPixel(scaledImage);
-	int u2 = calcMeanCornerPixel(scaledImage);
-	int tOld = -1;
-	int tNew = (u1 + u2) / 2;
-
-	//std::cout << "New threshold: " << tNew << std::endl;
-
-	while (tNew != tOld) {
-		u1 = calcMeanCenterPixel(scaledImage, tNew);
-		u2 = calcMeanCornerPixel(scaledImage, tNew);
-
-		tOld = tNew;
-		tNew = (u1 + u2) / 2;
-
-		std::cout << "New threshold: " << tNew << std::endl;
-	}
-
-	for (int y = 0; y < image.getHeight(); y++) {
-		for (int x = 0; x < image.getWidth(); x++) {
-			if (image.getPixel(x, y) >= tNew) {
-				thresholdImage->setPixel(x, y, 255);
-			}
-			else {
-				thresholdImage->setPixel(x, y, 0);
+		for (int y = 0; y < image.getHeight(); y++) {
+			for (int x = 0; x < image.getWidth(); x++) {
+				if (image.getPixel(x, y) >= tNew) {
+					thresholdImage->setPixel(x, y, 255);
+				}
+				else {
+					thresholdImage->setPixel(x, y, 0);
+				}
 			}
 		}
+
+		long endTime = cv::getTickCount();
+
+		timings[i] = (endTime - startTime) / cv::getTickFrequency();
 	}
 
+	float sum = 0.0f;
+
+	// Take a average
+	for (int i = 0; i < testIterations; i++) {
+		sum += timings[i];
+	}
+
+	std::cout << "Elapsed time edge thresholding: " << (sum / testIterations) << std::endl;
 	return thresholdImage;
 }

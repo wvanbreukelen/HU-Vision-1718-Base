@@ -8,10 +8,16 @@
 #include "PreProcessing.h"
 #include "IntensityImageStudent.h"
 #include "ImageFactory.h"
+#include <iostream>
+#include <opencv2\opencv.hpp>
+
+const int testIterations = 50;
 
 class StudentPreProcessing : public PreProcessing {
 private:
-	enum operators {PREWITT, SOBEL};
+	enum class operators {PREWITT, SOBEL};
+
+	
 
 	const int kernelGradientSobelX[3][3] = {
 	{ -1, 0, 1 },
@@ -43,10 +49,24 @@ public:
 	IntensityImage * stepEdgeDetection(const IntensityImage &image) const;
 	IntensityImage * stepThresholding(const IntensityImage &image) const;
 
+	/*
+	Calculate gradient in the X direction.
+	*/
 	int calcGradientX(const IntensityImage &image, const int x, const int y, operators op = operators::PREWITT) const;
+
+	/*
+	Calculate gradient in the Y direction.
+	*/
 	int calcGradientY(const IntensityImage &image, const int x, const int y, operators op = operators::PREWITT) const;
 
+	/*
+	Calculate the average pixel intensity for the center of the image (center = image - border).
+	*/
 	float calcMeanCenterPixel(const IntensityImage *image, int thresholdLevel = -1) const;
-	int calcMeanCornerPixel(const IntensityImage *image, int thresholdLevel = -1) const;
+
+	/*
+	Calculate the mean border pixel intensity for the image.
+	*/
+	int calcMeanBorderPixel(const IntensityImage *image, int thresholdLevel = -1) const;
 
 };
