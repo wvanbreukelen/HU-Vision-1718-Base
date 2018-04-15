@@ -21,3 +21,7 @@ Mogelijke edge detection methoden:
 
 Er zullen vast meer edge detection methoden bestaan maar hier dient nog onderzoek naar worden gedaan!
 Uiteindelijk gaat het erom dat onze keuze goed onderbouwd wordt aan de hand van een hypothese (wat verwacht ik?). Deze hypothese slaat dan ook weer terug op de twee gekozen meetrapport onderwerpen.
+
+## Implementation plan
+[Document](https://github.com/wvanbreukelen/HU-Vision-1718-Base/blob/master/implementatieplannen/working/Implementatieplan.docx)
+
